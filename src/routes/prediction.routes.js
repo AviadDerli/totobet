@@ -5,6 +5,9 @@ const PredictionController = require('../controllers/prediction.controller');
 // Submit or update match & bonus predictions inside a group
 router.put('/groups/:groupId', PredictionController.updatePrediction);
 
+// Fetch prediction(s) in a group (supports ?userId=... or returns group predictions)
+router.get('/groups/:groupId', PredictionController.getPrediction);
+
 // Fetch a user's prediction in a group
 router.get('/groups/:groupId/user/:userId', PredictionController.getPrediction);
 

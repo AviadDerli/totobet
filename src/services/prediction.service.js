@@ -173,15 +173,29 @@ class PredictionService {
 
   /**
    * Retrieves all predictions in a group (for leaderboard or post-deadline viewing)
+   * Includes populated group and template matches.
    */
   async getGroupPredictions(groupId) {
     if (!mongoose.Types.ObjectId.isValid(groupId)) {
       throw new AppError('Invalid Group ID', 400);
     }
 
-    return Prediction.find({ groupId })
-      .populate('userId', 'name nickname')
+    const group = await ProgramGroup.findById(groupId)
+      .populate('templateId')
+      .populate('participants', 'name phone nickname coins');
+
+    const predictions = await Prediction.find({ groupId })
+      .populate('userId', 'name phone nickname')
+      .populate('templateId')
       .sort({ correctHits: -1 });
+
+    return {
+      group,
+      template: group ? group.templateId : null,
+      matches: group && group.templateId ? group.templateId.matches : [],
+      bonusQuestions: group && group.templateId ? group.templateId.bonusQuestions : [],
+      predictions
+    };
   }
 
   /**

@@ -32,24 +32,22 @@ class PredictionController {
   });
 
   /**
-   * Get single prediction for user in group
+   * Get single prediction for user in group (or all group predictions if no userId provided)
+   * GET /api/v1/predictions/groups/:groupId
    * GET /api/v1/predictions/groups/:groupId/user/:userId
    */
   getPrediction = asyncHandler(async (req, res) => {
     const { groupId, userId } = req.params;
     const queryUserId = userId || req.query.userId;
 
-    if (!queryUserId) {
-      throw new AppError('User ID is required', 400);
+    if (queryUserId) {
+      const prediction = await PredictionService.getPrediction(queryUserId, groupId);
+      return success(res, prediction, 'Prediction retrieved');
     }
 
-    const prediction = await PredictionService.getPrediction(queryUserId, groupId);
-
-    return success(
-      res,
-      prediction,
-      'Prediction retrieved'
-    );
+    // If no userId is provided, return all predictions for the group
+    const predictions = await PredictionService.getGroupPredictions(groupId);
+    return success(res, predictions, 'Group predictions retrieved');
   });
 
   /**
