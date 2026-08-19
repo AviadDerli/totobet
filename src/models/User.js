@@ -8,6 +8,13 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Name is required'],
       trim: true
     },
+    phone: {
+      type: String,
+      required: [true, 'Phone number is required'],
+      unique: true,
+      trim: true,
+      match: [/^\+?[0-9]{9,15}$/, 'Please provide a valid phone number (9-15 digits)']
+    },
     nickname: {
       type: String,
       trim: true,

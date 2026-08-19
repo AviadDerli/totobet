@@ -9,14 +9,14 @@ class AuthController {
    * POST /api/v1/auth/register
    */
   register = asyncHandler(async (req, res) => {
-    const { name, nickname, pin, role, referralCode } = req.body;
+    const { name, phone, nickname, pin, role, referralCode } = req.body;
 
-    if (!name || !pin) {
-      throw new AppError('Name and 4-digit PIN are required', 400);
+    if (!name || !phone || !pin) {
+      throw new AppError('Name, phone number, and 4-digit PIN are required', 400);
     }
 
     const newUser = await AuthService.register(
-      { name, nickname, pin, role },
+      { name, phone, nickname, pin, role },
       referralCode
     );
 
@@ -33,14 +33,14 @@ class AuthController {
    * POST /api/v1/auth/login
    */
   login = asyncHandler(async (req, res) => {
-    const { identifier, userId, pin } = req.body;
-    const loginId = identifier || userId;
+    const { phone, identifier, userId, pin } = req.body;
+    const loginIdentifier = phone || identifier || userId;
 
-    if (!loginId || !pin) {
-      throw new AppError('User identifier and PIN are required', 400);
+    if (!loginIdentifier || !pin) {
+      throw new AppError('Phone number and PIN are required', 400);
     }
 
-    const user = await AuthService.login(loginId, pin);
+    const user = await AuthService.login(loginIdentifier, pin);
 
     return success(
       res,

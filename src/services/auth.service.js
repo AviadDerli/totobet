@@ -12,10 +12,25 @@ class AuthService {
    * If optionalReferralCode is provided and valid, links referrer and credits their wallet.
    */
   async register(userData, optionalReferralCode = null) {
-    const { name, nickname, pin, role } = userData;
+    const { name, phone, nickname, pin, role } = userData;
 
     if (!name || !name.trim()) {
       throw new AppError('User name is required', 400);
+    }
+
+    if (!phone || !phone.toString().trim()) {
+      throw new AppError('Phone number is required', 400);
+    }
+
+    const cleanPhone = phone.toString().trim().replace(/[-\s]/g, '');
+    if (!/^\+?[0-9]{9,15}$/.test(cleanPhone)) {
+      throw new AppError('Invalid phone number format (9-15 digits required)', 400);
+    }
+
+    // Check if phone already exists
+    const existingPhoneUser = await User.findOne({ phone: cleanPhone });
+    if (existingPhoneUser) {
+      throw new AppError('Phone number is already registered', 409);
     }
 
     if (!pin || !/^\d{4}$/.test(pin.toString())) {
@@ -54,6 +69,7 @@ class AuthService {
     // Create new user
     const newUser = new User({
       name: name.trim(),
+      phone: cleanPhone,
       nickname: nickname ? nickname.trim() : '',
       pin: pin.toString(),
       role: role && Object.values(ROLES).includes(role) ? role : ROLES.USER,
@@ -77,29 +93,36 @@ class AuthService {
   }
 
   /**
-   * Simple login using User ID, Nickname, Name or ReferralCode + 4-digit PIN
+   * Login using Phone number + 4-digit PIN
    */
-  async login(identifier, pin) {
-    if (!identifier) {
-      throw new AppError('User identifier (ID, nickname, name, or referral code) is required', 400);
+  async login(phoneOrIdentifier, pin) {
+    if (!phoneOrIdentifier) {
+      throw new AppError('Phone number is required for login', 400);
     }
 
     if (!pin || !/^\d{4}$/.test(pin.toString())) {
       throw new AppError('A valid 4-digit PIN is required', 400);
     }
 
-    const query = [];
-    if (mongoose.Types.ObjectId.isValid(identifier)) {
-      query.push({ _id: identifier });
+    const cleanInput = phoneOrIdentifier.toString().trim();
+    const cleanPhone = cleanInput.replace(/[-\s]/g, '');
+
+    const query = [
+      { phone: cleanPhone },
+      { phone: cleanInput }
+    ];
+
+    if (mongoose.Types.ObjectId.isValid(cleanInput)) {
+      query.push({ _id: cleanInput });
     }
-    query.push({ nickname: identifier });
-    query.push({ name: identifier });
-    query.push({ referralCode: identifier.toString().toUpperCase() });
+    query.push({ nickname: cleanInput });
+    query.push({ name: cleanInput });
+    query.push({ referralCode: cleanInput.toUpperCase() });
 
     const user = await User.findOne({ $or: query });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError('User not found with this phone number', 404);
     }
 
     if (user.pin !== pin.toString()) {

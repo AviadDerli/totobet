@@ -41,24 +41,26 @@ const runVerification = async () => {
     const adminUser = await AuthService.register(
       {
         name: `Admin_${timestamp}`,
+        phone: `050${Math.floor(1000000 + Math.random() * 9000000)}`,
         nickname: `admin_${timestamp}`,
         pin: '1234',
         role: 'admin'
       }
     );
-    console.log(`✅ Admin registered: ${adminUser.name}, RefCode: ${adminUser.referralCode}, Coins: ${adminUser.coins}`);
+    console.log(`✅ Admin registered: ${adminUser.name}, Phone: ${adminUser.phone}, RefCode: ${adminUser.referralCode}, Coins: ${adminUser.coins}`);
 
     // Register User 1 with Admin's referral code
     const user1 = await AuthService.register(
       {
         name: `David_${timestamp}`,
+        phone: `052${Math.floor(1000000 + Math.random() * 9000000)}`,
         nickname: `david_${timestamp}`,
         pin: '5678',
         role: 'user'
       },
       adminUser.referralCode
     );
-    console.log(`✅ User 1 (David) registered with Admin's referral code: Coins: ${user1.coins}, ReferredBy: ${user1.referredBy}`);
+    console.log(`✅ User 1 (David) registered with Admin's referral code: Phone: ${user1.phone}, Coins: ${user1.coins}, ReferredBy: ${user1.referredBy}`);
 
     // Verify Admin received +50 referral coins
     const updatedAdmin = await AuthService.getUserById(adminUser._id);
@@ -70,20 +72,22 @@ const runVerification = async () => {
     // Register User 2 and User 3
     const user2 = await AuthService.register({
       name: `Sarah_${timestamp}`,
+      phone: `053${Math.floor(1000000 + Math.random() * 9000000)}`,
       nickname: `sarah_${timestamp}`,
       pin: '1111'
     });
     const user3 = await AuthService.register({
       name: `Michael_${timestamp}`,
+      phone: `054${Math.floor(1000000 + Math.random() * 9000000)}`,
       nickname: `michael_${timestamp}`,
       pin: '2222'
     });
-    console.log(`✅ User 2 (Sarah) registered. Coins: ${user2.coins}`);
-    console.log(`✅ User 3 (Michael) registered. Coins: ${user3.coins}`);
+    console.log(`✅ User 2 (Sarah) registered. Phone: ${user2.phone}, Coins: ${user2.coins}`);
+    console.log(`✅ User 3 (Michael) registered. Phone: ${user3.phone}, Coins: ${user3.coins}`);
 
-    // Test Login
-    const loginRes = await AuthService.login(user1.nickname, '5678');
-    console.log(`✅ User 1 Login successful for nickname '${user1.nickname}'`);
+    // Test Login with Phone + PIN
+    const loginRes = await AuthService.login(user1.phone, '5678');
+    console.log(`✅ User 1 Login successful with Phone '${user1.phone}' and PIN '5678'`);
 
     // ----------------------------------------------------------------
     // 3. Admin Creates Program Template
