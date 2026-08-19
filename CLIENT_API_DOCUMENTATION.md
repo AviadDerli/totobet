@@ -254,13 +254,229 @@ http://localhost:5000/api/v1
 
 ---
 
-### 4. שירות היסטוריה ופרופיל שחקן (User Dashboard Service)
+### 4. שירות היסטוריה, תוכניות וגרפים של משתמש (User Programs & Analytics)
 
-שירות זה מיועד למסכי "הפרופיל שלי", "המשחקים שלי" ו"היסטוריית ניחושים":
+שירות זה מיועד למסכי "התוכניות שלי" (פתוחות והסתיימו), לוח הבקרה וצפייה בגרפי התפלגות ניחושים.
 
+#### א. שליפת כל התוכניות של המשתמש (`Get User Programs`)
+* **Endpoint:** `GET /api/v1/users/:id/programs`
+* **תיאור:** מחזיר את כל התוכניות שהמשתמש השתתף בהן – מחולקות לתוכניות פתוחות (`activePrograms`) ותוכניות שהסתיימו (`completedPrograms`), כולל טופס הניחושים של המשתמש וסיכום תוצאות וזכיות.
+* **תשובה מוצלחת (`200 OK`):**
+```json
+{
+  "success": true,
+  "message": "User programs retrieved",
+  "data": {
+    "total": 3,
+    "activeCount": 1,
+    "completedCount": 2,
+    "activePrograms": [
+      {
+        "template": {
+          "id": "6a85b41b542e6a2fa4b3d576",
+          "title": "מחזור 25 - ליגת העל",
+          "entryFee": 30,
+          "prizePool": 600,
+          "deadline": "2026-08-22T18:00:00.000Z",
+          "deadlineIsraelFormatted": "2026-08-22 21:00:00 GMT+3",
+          "isPastDeadline": false,
+          "isActive": true,
+          "matchesCount": 6,
+          "matches": [ ... ],
+          "bonusQuestions": [ ... ]
+        },
+        "group": {
+          "id": "6a85b41b542e6a2fa4b3d57c",
+          "status": "pending",
+          "privateCode": "3356",
+          "participantsCount": 14,
+          "maxParticipants": 30
+        },
+        "prediction": {
+          "id": "6a85b41b542e6a2fa4b3d582",
+          "matchGuesses": [
+            { "matchId": "m_1", "guess": "1" },
+            { "matchId": "m_2", "guess": "X" }
+          ],
+          "bonusGuesses": [
+            { "questionId": "q_1", "guessNumber": 3 }
+          ],
+          "correctHits": 0,
+          "totalGuesses": 2,
+          "isComplete": false
+        },
+        "programStatus": "open",
+        "resultSummary": null
+      }
+    ],
+    "completedPrograms": [
+      {
+        "template": {
+          "id": "6a85d3790510679c58abdb5c",
+          "title": "מחזור 24 - ליגת העל",
+          "entryFee": 30,
+          "prizePool": 600,
+          "isActive": false,
+          "isPastDeadline": true,
+          "matches": [ ... ]
+        },
+        "group": {
+          "id": "6a85d3790510679c58abdb62",
+          "status": "completed",
+          "privateCode": "2893",
+          "participantsCount": 2
+        },
+        "prediction": {
+          "id": "6a85d37a0510679c58abdb68",
+          "matchGuesses": [ ... ],
+          "correctHits": 3
+        },
+        "programStatus": "completed",
+        "resultSummary": {
+          "correctHits": 3,
+          "totalMatches": 3,
+          "highestScoreInGroup": 3,
+          "isWinner": true,
+          "winnersCount": 1,
+          "prizeCoinsWon": 600
+        }
+      }
+    ]
+  }
+}
+```
+
+---
+
+#### ב. מידע מקיף על תוכנית ונתוני גרף התפלגות ניחושים (`Program Summary & Match Distribution Graph`)
+* **Endpoint:** `GET /api/v1/programs/templates/:templateId/summary?userId=USER_ID`
+* **או דרך החדר:** `GET /api/v1/programs/groups/:groupId/summary?userId=USER_ID`
+* **תיאור:** 
+  * מחזיר את כל פרטי התוכנית והניחושים של המשתמש.
+  * **אם התוכנית סגורה / עבר הדדליין (`isClosed: true`):** מחזיר התפלגות סטטיסטית מלאה של כל ניחושי שאר המתמודדים עבור כל משחק (כמות ואחוזי ניחוש ל-`1`, `X`, `2`) לצורך הצגה בגרף עמודות / עוגה, התפלגות שאלות הבונוס וטבלת מובילים של החדר!
+* **תשובה מוצלחת (`200 OK`):**
+```json
+{
+  "success": true,
+  "message": "Program summary and graph statistics retrieved",
+  "data": {
+    "template": {
+      "id": "6a85d3790510679c58abdb5c",
+      "title": "מחזור 25 - ליגת העל",
+      "entryFee": 30,
+      "prizePool": 600,
+      "deadline": "2026-08-19T19:02:01.000Z",
+      "deadlineIsraelFormatted": "2026-08-19 22:02:01 GMT+3",
+      "isActive": false,
+      "isPastDeadline": true,
+      "matches": [ ... ],
+      "bonusQuestions": [ ... ]
+    },
+    "group": {
+      "id": "6a85d3790510679c58abdb62",
+      "status": "completed",
+      "privateCode": "2893",
+      "participantsCount": 2,
+      "maxParticipants": 2
+    },
+    "isClosed": true,
+    "isGraphDataAvailable": true,
+    "userPrediction": {
+      "_id": "6a85d37a0510679c58abdb68",
+      "matchGuesses": [
+        { "matchId": "m_1", "guess": "1" },
+        { "matchId": "m_2", "guess": "X" }
+      ],
+      "correctHits": 3
+    },
+    "matchesDistribution": [
+      {
+        "matchId": "m_1",
+        "homeTeam": "מכבי תל אביב",
+        "homeLogo": "https://media.api-sports.io/football/teams/558.png",
+        "awayTeam": "מכבי חיפה",
+        "awayLogo": "https://media.api-sports.io/football/teams/559.png",
+        "status": "finished",
+        "actualResult": "1",
+        "userGuess": "1",
+        "isUserCorrect": true,
+        "distribution": {
+          "1": 15,
+          "X": 10,
+          "2": 4,
+          "none": 1,
+          "totalGuesses": 29
+        },
+        "percentages": {
+          "1": 50.0,
+          "X": 33.3,
+          "2": 13.3,
+          "none": 3.3
+        }
+      },
+      {
+        "matchId": "m_2",
+        "homeTeam": "הפועל באר שבע",
+        "homeLogo": "https://media.api-sports.io/football/teams/560.png",
+        "awayTeam": "בית\"ר ירושלים",
+        "awayLogo": "https://media.api-sports.io/football/teams/561.png",
+        "status": "finished",
+        "actualResult": "X",
+        "userGuess": "X",
+        "isUserCorrect": true,
+        "distribution": {
+          "1": 8,
+          "X": 16,
+          "2": 6,
+          "none": 0,
+          "totalGuesses": 30
+        },
+        "percentages": {
+          "1": 26.7,
+          "X": 53.3,
+          "2": 20.0,
+          "none": 0.0
+        }
+      }
+    ],
+    "bonusDistribution": [
+      {
+        "questionId": "q_1",
+        "title": "כמה שערים יובקעו במשחק העונה?",
+        "actualResult": 3,
+        "userGuessNumber": 3,
+        "isUserCorrect": true,
+        "guessCounts": {
+          "2": 5,
+          "3": 12,
+          "4": 3
+        }
+      }
+    ],
+    "groupLeaderboard": [
+      {
+        "userId": "6a85d3780510679c58abdb48",
+        "name": "דוד כהן",
+        "nickname": "davidc",
+        "correctHits": 3
+      },
+      {
+        "userId": "6a85d3780510679c58abdb50",
+        "name": "שרה לוי",
+        "nickname": "sarah",
+        "correctHits": 2
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 5. שירות פרופיל שחקן (User Profile Service)
 * `GET /api/v1/users/:id` - פרטי המשתמש ויתרת מטבעות עדכנית.
-* `GET /api/v1/users/:id/groups` - כל החדרים שהמשתמש השתתף בהם בעבר או בהווה.
-* `GET /api/v1/users/:id/predictions` - כל הטפסים והניחושים שהמשתמש מילא אי פעם.
+* `GET /api/v1/users/:id/groups` - כל החדרים שהמשתמש השתתף בהם.
+* `GET /api/v1/users/:id/predictions` - כל הטפסים והניחושים של המשתמש.
 
 ---
 

@@ -37,6 +37,21 @@ class UserController {
   });
 
   /**
+   * Get all programs for a user (categorized into open and completed with predictions and results)
+   * GET /api/v1/users/:id/programs
+   */
+  getUserPrograms = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const programs = await PredictionService.getUserPrograms(id);
+
+    return success(
+      res,
+      programs,
+      'User programs retrieved'
+    );
+  });
+
+  /**
    * Get all predictions submitted by a user
    * GET /api/v1/users/:id/predictions
    */

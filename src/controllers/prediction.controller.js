@@ -64,6 +64,29 @@ class PredictionController {
       'Group predictions retrieved'
     );
   });
+
+  /**
+   * Get comprehensive program summary, user prediction, and graph stats (1, X, 2 distribution)
+   * GET /api/v1/predictions/templates/:templateId/summary
+   * GET /api/v1/predictions/groups/:groupId/summary
+   */
+  getProgramSummary = asyncHandler(async (req, res) => {
+    const templateId = req.params.templateId || req.params.id;
+    const groupId = req.params.groupId;
+    const userId = req.query.userId || req.body?.userId;
+
+    const summary = await PredictionService.getProgramSummaryWithStats({
+      templateId,
+      groupId,
+      userId
+    });
+
+    return success(
+      res,
+      summary,
+      'Program summary and graph statistics retrieved'
+    );
+  });
 }
 
 module.exports = new PredictionController();

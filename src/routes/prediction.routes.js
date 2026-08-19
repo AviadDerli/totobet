@@ -7,6 +7,7 @@ router.put('/groups/:groupId', PredictionController.updatePrediction);
 
 // Fetch prediction(s) in a group (supports ?userId=... or returns group predictions)
 router.get('/groups/:groupId', PredictionController.getPrediction);
+router.get('/groups/:groupId/summary', PredictionController.getProgramSummary);
 
 // Fetch a user's prediction in a group
 router.get('/groups/:groupId/user/:userId', PredictionController.getPrediction);
